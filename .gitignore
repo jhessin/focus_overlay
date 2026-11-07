@@ -218,5 +218,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Debugging files
 /.repro
 /repro.lua
+
+# user files
+/schedule.json

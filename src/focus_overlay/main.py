@@ -121,8 +121,14 @@ class FocusOverlay:
 
     def run_tray(self):
         menu = pystray.Menu(
-            item("Add Schedule Item", lambda: self.add_schedule_item()),
-            item("Toggle Click Through", lambda: self.toggle_clickthrough()),
+            # item("Add Schedule Item", lambda: self.add_schedule_item()),
+            item(
+                "Add Schedule Item", lambda: self.root.after(0, self.add_schedule_item)
+            ),
+            item(
+                "Toggle Click Through",
+                lambda: self.root.after(0, self.toggle_clickthrough),
+            ),
             item("Exit", lambda icon, item: self.quit(icon)),
         )
         icon = pystray.Icon("FocusOverlay", self.create_image(), "Focus Overlay", menu)

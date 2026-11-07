@@ -15,7 +15,8 @@ cwd=<root>
 # - quickfix: output to quickfix window
 # - terminal: run the command in the internal terminal
 output=terminal
-pos=bottom
+pos=tab
+focus=0
 
 
 # save file before execute
