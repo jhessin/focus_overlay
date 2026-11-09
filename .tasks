@@ -6,7 +6,7 @@
 
 # shell command, use quotation for filenames containing spaces
 # check ":AsyncTaskMacro" to see available macros
-command=uv run -m src.focus_overlay
+command=uv run focus-overlay
 
 # working directory, can change to $(VIM_ROOT) for project root
 cwd=<root>
