@@ -3,7 +3,7 @@ import os
 import threading
 import tkinter as tk
 from datetime import datetime
-from tkinter import messagebox, simpledialog
+from tkinter import simpledialog
 
 import pystray
 from PIL import Image, ImageDraw
@@ -23,10 +23,7 @@ class FocusOverlay:
         self.root.attributes("-alpha", 0.75)
         self.root.configure(bg="black")
 
-        try:
-            self.root.wm_attributes("-transparentcolor", "black")
-        except:
-            pass
+        self.root.wm_attributes("-transparentcolor", "black")
 
         self.label = tk.Label(
             self.root,
@@ -91,29 +88,30 @@ class FocusOverlay:
             self.save_schedule()
 
     def toggle_clickthrough(self):
-        try:
-            import ctypes
+        # try:
+        import ctypes
 
-            hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
-            GWL_EXSTYLE = -20
-            WS_EX_LAYERED = 0x80000
-            WS_EX_TRANSPARENT = 0x20
-            styles = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+        hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
+        GWL_EXSTYLE = -20
+        WS_EX_LAYERED = 0x80000
+        WS_EX_TRANSPARENT = 0x20
+        styles = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
 
-            if not self.clickthrough:
-                ctypes.windll.user32.SetWindowLongW(
-                    hwnd, GWL_EXSTYLE, styles | WS_EX_LAYERED | WS_EX_TRANSPARENT
-                )
-            else:
-                ctypes.windll.user32.SetWindowLongW(
-                    hwnd, GWL_EXSTYLE, styles & ~WS_EX_TRANSPARENT
-                )
+        if not self.clickthrough:
+            ctypes.windll.user32.SetWindowLongW(
+                hwnd, GWL_EXSTYLE, styles | WS_EX_LAYERED | WS_EX_TRANSPARENT
+            )
+        else:
+            ctypes.windll.user32.SetWindowLongW(
+                hwnd, GWL_EXSTYLE, styles & ~WS_EX_TRANSPARENT
+            )
 
-            self.clickthrough = not self.clickthrough
-        except Exception as e:
-            messagebox.showerror("Error", str(e))
+        self.clickthrough = not self.clickthrough
 
-    def create_image(self):
+        # except Exception as e:
+        #     messagebox.showerror("Error", str(e))
+
+    def create_image(self) -> Image.Image:
         img = Image.new("RGB", (64, 64), (0, 120, 215))
         d = ImageDraw.Draw(img)
         d.text((18, 18), "F", fill="white")
@@ -121,7 +119,6 @@ class FocusOverlay:
 
     def run_tray(self):
         menu = pystray.Menu(
-            # item("Add Schedule Item", lambda: self.add_schedule_item()),
             item(
                 "Add Schedule Item", lambda: self.root.after(0, self.add_schedule_item)
             ),
@@ -129,7 +126,10 @@ class FocusOverlay:
                 "Toggle Click Through",
                 lambda: self.root.after(0, self.toggle_clickthrough),
             ),
-            item("Exit", lambda icon, item: self.quit(icon)),
+            item(
+                "Exit",
+                lambda icon, item: self.root.after(0, lambda: self.quit(icon)),
+            ),
         )
         icon = pystray.Icon("FocusOverlay", self.create_image(), "Focus Overlay", menu)
         icon.run()
