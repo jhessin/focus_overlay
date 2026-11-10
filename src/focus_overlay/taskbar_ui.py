@@ -4,6 +4,9 @@ from collections.abc import Callable
 
 from .schedule_manager import ScheduleManager, TimeBlock
 
+SCHEDULE_FONT_SIZE = 15
+MODE_FONT_SIZE = 20
+
 
 class TaskbarOverlay(tk.Tk):
     """A compact, frameless desktop overlay widget built with Tkinter."""
@@ -20,6 +23,8 @@ class TaskbarOverlay(tk.Tk):
         # Window drag offsets
         self._offset_x = 0
         self._offset_y = 0
+
+        self.clickthrough: bool = False
 
         self._init_ui()
         self._setup_timer()
@@ -47,7 +52,7 @@ class TaskbarOverlay(tk.Tk):
         self.schedule_label = tk.Label(
             text_frame,
             text="Schedule: None",
-            font=("Segoe UI", 8),
+            font=("Segoe UI", SCHEDULE_FONT_SIZE),
             fg="#A0A0A0",
             bg="#1E1E1E",
             anchor=tk.W,
@@ -57,16 +62,35 @@ class TaskbarOverlay(tk.Tk):
         self.mode_label = tk.Label(
             text_frame,
             text="No Active Block",
-            font=("Segoe UI", 9, "bold"),
+            font=("Segoe UI", MODE_FONT_SIZE, "bold"),
             fg="#4CAF50",
             bg="#1E1E1E",
             anchor=tk.W,
         )
         self.mode_label.pack(fill=tk.X)
 
+        # Button Container
+        button_container: tk.Frame = tk.Frame(container)
+        button_container.pack(side=tk.RIGHT)
+
+        # Clickthrough button
+        self.clickthrough_button: tk.Button = tk.Button(
+            button_container,
+            text="🔓",
+            font=("Segoe UI", 11),
+            fg="#CCCCCC",
+            bg="#1E1E1E",
+            activeforeground="#FFFFFF",
+            activebackground="#2A2A2A",
+            bd=0,
+            cursor="hand2",
+            command=self.toggle_clickthrough,
+        )
+        self.clickthrough_button.pack()
+
         # Settings gear button
         settings_button = tk.Button(
-            container,
+            button_container,
             text="⚙️",
             font=("Segoe UI", 11),
             fg="#CCCCCC",
@@ -77,7 +101,7 @@ class TaskbarOverlay(tk.Tk):
             cursor="hand2",
             command=self.on_open_settings,
         )
-        settings_button.pack(side=tk.RIGHT)
+        settings_button.pack()
 
         # Enable window dragging on all static elements
         for widget in (
@@ -89,6 +113,35 @@ class TaskbarOverlay(tk.Tk):
         ):
             widget.bind("<Button-1>", self._start_drag)
             widget.bind("<B1-Motion>", self._drag)
+
+    def toggle_clickthrough(self):
+        # try:
+        import ctypes
+
+        hwnd = ctypes.windll.user32.GetParent(self.winfo_id())
+        GWL_EXSTYLE = -20
+        WS_EX_LAYERED = 0x80000
+        WS_EX_TRANSPARENT = 0x20
+        styles = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+
+        if not self.clickthrough:
+            ctypes.windll.user32.SetWindowLongW(
+                hwnd, GWL_EXSTYLE, styles | WS_EX_LAYERED | WS_EX_TRANSPARENT
+            )
+        else:
+            ctypes.windll.user32.SetWindowLongW(
+                hwnd, GWL_EXSTYLE, styles & ~WS_EX_TRANSPARENT
+            )
+
+        self.clickthrough = not self.clickthrough
+
+        if self.clickthrough:
+            self.clickthrough_button["text"] = "🔒"
+        else:
+            self.clickthrough_button["text"] = "🔓"
+
+        # except Exception as e:
+        #     messagebox.showerror("Error", str(e))
 
     def _start_drag(self, event: tk.Event) -> None:
         """Captures initial mouse offset when dragging begins."""
