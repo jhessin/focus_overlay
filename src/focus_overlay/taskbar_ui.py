@@ -1,11 +1,20 @@
 # src/focus\_overlay/taskbar\_ui.py
+import ctypes
 import tkinter as tk
 from collections.abc import Callable
 
+import keyboard
+
 from .schedule_manager import ScheduleManager, TimeBlock
+
+GWL_EXSTYLE = -20
+WS_EX_LAYERED = 0x00080000
+WS_EX_TRANSPARENT = 0x00000020
 
 SCHEDULE_FONT_SIZE = 15
 MODE_FONT_SIZE = 20
+
+CLICKTHROUGH_HOTKEY = "ctrl+shift+l"
 
 
 class TaskbarOverlay(tk.Tk):
@@ -28,6 +37,7 @@ class TaskbarOverlay(tk.Tk):
 
         self._init_ui()
         self._setup_timer()
+        self._setup_global_hotkey()
 
     def _init_ui(self) -> None:
         """Configures window properties, styling, and layout."""
@@ -114,34 +124,35 @@ class TaskbarOverlay(tk.Tk):
             widget.bind("<Button-1>", self._start_drag)
             widget.bind("<B1-Motion>", self._drag)
 
+    def _setup_global_hotkey(self) -> None:
+        """Registers a global hotkey (CLICKTHROUGH_HOTKEY) to toggle lock state from anywhere."""
+        keyboard.add_hotkey(CLICKTHROUGH_HOTKEY, self.toggle_clickthrough)
+
     def toggle_clickthrough(self):
-        # try:
-        import ctypes
-
-        hwnd = ctypes.windll.user32.GetParent(self.winfo_id())
-        GWL_EXSTYLE = -20
-        WS_EX_LAYERED = 0x80000
-        WS_EX_TRANSPARENT = 0x20
-        styles = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-
-        if not self.clickthrough:
-            ctypes.windll.user32.SetWindowLongW(
-                hwnd, GWL_EXSTYLE, styles | WS_EX_LAYERED | WS_EX_TRANSPARENT
-            )
-        else:
-            ctypes.windll.user32.SetWindowLongW(
-                hwnd, GWL_EXSTYLE, styles & ~WS_EX_TRANSPARENT
-            )
-
         self.clickthrough = not self.clickthrough
+        self._apply_clickthrough_state()
+
+    def _apply_clickthrough_state(self):
+        self.update_idletasks()
+        hwnd = ctypes.windll.user32.GetParent(self.winfo_id())
+        # Get current window extended style (GWL_EXSTYLE = -20)
+        try:
+            ex_style = ctypes.windll.user32.GetWindowLongW(hwnd, -20)
+        except AttributeError:
+            # Fallback for non-Windows platforms (though win32 is required for transparency.)
+            return
 
         if self.clickthrough:
+            # Enable click-through:
             self.clickthrough_button["text"] = "🔒"
+            ctypes.windll.user32.SetWindowLongW(
+                hwnd, GWL_EXSTYLE, ex_style | WS_EX_LAYERED | WS_EX_TRANSPARENT
+            )
         else:
             self.clickthrough_button["text"] = "🔓"
-
-        # except Exception as e:
-        #     messagebox.showerror("Error", str(e))
+            ctypes.windll.user32.SetWindowLongW(
+                hwnd, GWL_EXSTYLE, ex_style & ~WS_EX_TRANSPARENT
+            )
 
     def _start_drag(self, event: tk.Event) -> None:
         """Captures initial mouse offset when dragging begins."""
