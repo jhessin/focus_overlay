@@ -55,6 +55,12 @@ class TaskbarOverlay(tk.Tk):
         container = tk.Frame(self, bg="#1E1E1E", padx=10, pady=6)
         container.pack(fill=tk.BOTH, expand=True)
 
+        # Quit Button
+        quit_button: tk.Button = tk.Button(
+            container, anchor=tk.NW, text="❌", command=self.quit
+        )
+        quit_button.pack(side=tk.LEFT)
+
         # Label container for schedule & mode text
         text_frame = tk.Frame(container, bg="#1E1E1E")
         text_frame.pack(side=tk.LEFT, padx=(0, 10))
