@@ -16,6 +16,7 @@ class ScheduleManagerWindow(tk.Toplevel):
         on_schedule_changed_callback: Callable[[], None],
         parent: tk.Tk | None = None,
     ) -> None:
+        super().__init__()
         self.schedule_manager: ScheduleManager = schedule_manager
         self.on_schedule_changed: Callable[[], None] = on_schedule_changed_callback
 

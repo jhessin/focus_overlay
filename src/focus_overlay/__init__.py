@@ -1,4 +1,4 @@
-from .main import FocusOverlay as FocusOverlay
+from .main import FocusOverlayApp as FocusOverlay
 
 
 def main():
