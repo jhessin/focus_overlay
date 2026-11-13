@@ -24,10 +24,13 @@ class TaskbarOverlay(tk.Tk):
         self,
         schedule_manager: ScheduleManager,
         on_open_settings_callback: Callable[[], None],
+        on_quit_callback: Callable[[], None] | None = None,
     ) -> None:
         super().__init__()
         self.schedule_manager: ScheduleManager = schedule_manager
         self.on_open_settings: Callable[[], None] = on_open_settings_callback
+        self.on_quit: Callable[[], None] = on_quit_callback or self.quit
+        self.protocol("WM_DELETE_WINDOW", self.on_quit)
 
         # Window drag offsets
         self._offset_x = 0
@@ -57,7 +60,7 @@ class TaskbarOverlay(tk.Tk):
 
         # Quit Button
         quit_button: tk.Button = tk.Button(
-            container, anchor=tk.NW, text="❌", command=self.quit
+            container, anchor=tk.NW, text="❌", command=self.on_quit
         )
         quit_button.pack(side=tk.LEFT)
 
